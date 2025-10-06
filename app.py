@@ -7,8 +7,7 @@ client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 app = Flask(__name__)
 
-HTML = """
-<!doctype html>
+HTML = """<!doctype html>
 <html>
 <head>
   <meta charset="utf-8">
@@ -43,8 +42,7 @@ HTML = """
     </form>
   {% endif %}
 </body>
-</html>
-"""
+</html>"""
 
 @app.route("/", methods=["GET"])
 def index():
@@ -67,7 +65,9 @@ def generate():
         b64 = result.data[0].b64_json
         return render_template_string(HTML, image_b64=b64)
     except Exception as e:
-        return render_template_string(HTML, error=str(e)), 500
+        # Log to server logs and show a friendly message
+        print(f"Error generating image: {e}")
+        return render_template_string(HTML, error="Failed to generate image. Check server logs."), 500
 
 if __name__ == "__main__":
     # Render sets PORT in the environment; default to 8000 locally
