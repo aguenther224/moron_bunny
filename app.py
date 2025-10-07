@@ -7,7 +7,8 @@ client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 app = Flask(__name__)
 
-HTML = """<!doctype html>
+HTML = """
+<!doctype html>
 <html>
 <head>
   <meta charset="utf-8">
@@ -19,13 +20,32 @@ HTML = """<!doctype html>
     img { max-width: 100%; border-radius: 12px; border:1px solid #ddd; }
     .row { margin: 20px 0; }
     .error { color: #c00; }
+
+    /* Working indicator styles */
+    .working { margin-left: 12px; color: #555; font-size: 14px; vertical-align: middle; }
+    .spinner {
+      display: inline-block;
+      width: 16px;
+      height: 16px;
+      border: 2px solid #ccc;
+      border-top-color: #6c47ff;
+      border-radius: 50%;
+      animation: spin .8s linear infinite;
+      vertical-align: -3px;
+      margin-right: 6px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
   </style>
 </head>
 <body>
   <h1>Moron Bunny Generator</h1>
 
-  <form method="post" action="/generate">
+  <form method="post" action="/generate" class="gen-form">
     <button class="btn" type="submit">Generate moron bunny</button>
+    <span class="working" hidden>
+      <span class="spinner" aria-hidden="true"></span>
+      Working on it...
+    </span>
   </form>
 
   {% if error %}
@@ -37,12 +57,37 @@ HTML = """<!doctype html>
       <h2>Your new bunny</h2>
       <img alt="moron bunny" src="data:image/png;base64,{{ image_b64 }}">
     </div>
-    <form method="post" action="/generate">
+    <form method="post" action="/generate" class="gen-form">
       <button class="btn" type="submit">Generate another</button>
+      <span class="working" hidden>
+        <span class="spinner" aria-hidden="true"></span>
+        Working on it...
+      </span>
     </form>
   {% endif %}
+
+  <script>
+    // Show "Working on it..." and disable button during form submission
+    window.addEventListener('DOMContentLoaded', function () {
+      document.querySelectorAll('form.gen-form').forEach(function (form) {
+        form.addEventListener('submit', function () {
+          const btn = form.querySelector('button[type="submit"]');
+          const working = form.querySelector('.working');
+          if (btn) {
+            btn.disabled = true;
+            btn.dataset.originalText = btn.textContent;
+            btn.textContent = 'Generating...';
+          }
+          if (working) {
+            working.hidden = false;
+          }
+        });
+      });
+    });
+  </script>
 </body>
-</html>"""
+</html>
+"""
 
 @app.route("/", methods=["GET"])
 def index():
